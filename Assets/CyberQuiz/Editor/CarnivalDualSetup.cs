@@ -83,7 +83,7 @@ namespace CyberQuiz.Editor
             var instructionTitle=q.instructions.GetComponentsInChildren<Text>(true).First(t=>t.text=="HOW TO PLAY");instructionTitle.text="Instructions";
             var instructionBody=q.instructions.GetComponentsInChildren<Text>(true).First(t=>t.text.StartsWith("1."));
             Place(instructionBody.rectTransform,310,435,1300,170);
-            instructionBody.text="1. Read each question on the screen.\n2. Tap cube A, B, C or D for the classification shown on that letter.\n3. Answer 10 random questions. The four labels move each question.";
+            instructionBody.text="1. Read each question on the screen.\n2. Tap the OPEN, SECRET, CONFIDENTIAL or SENSITIVE cube.\n3. Answer 10 random questions. The four choices move each question.";
             var start=q.instructions.GetComponentInChildren<Button>(true);Place((RectTransform)start.transform,740,670,440,90);
             start.GetComponent<Image>().sprite=Sprite("Group 8");start.GetComponent<Image>().color=Color.white;
 

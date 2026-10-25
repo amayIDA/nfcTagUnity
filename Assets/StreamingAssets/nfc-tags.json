@@ -1,7 +1,7 @@
 {
-  "comment": "NFC IDs for cubes A-D. Edit this file, save, then restart the game. No rebuild needed.",
-  "A": "2435786112",
-  "B": "2435817104",
-  "C": "2435882544",
-  "D": "2435920016"
+    "comment": "NFC IDs for the classification cubes. Each value is the tag for that classification. Edit this file, save, then restart the game. No rebuild needed.",
+    "OPEN": "2435786112",
+    "SECRET": "2435817104",
+    "CONFIDENTIAL": "2435882544",
+    "SENSITIVE": "2435920016"
 }

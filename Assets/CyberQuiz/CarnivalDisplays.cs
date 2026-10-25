@@ -27,6 +27,8 @@ namespace CyberQuiz
         public GameObject gameBackdrop, mirrorHud;
         public Text mirrorName, mirrorTime, mirrorCorrect;
         public Button leaderboardReplay;
+        [Tooltip("Bottom touchscreen only. Edit this object in the scene; the top display does not copy over it.")]
+        public Button clearLeaderboard;
         public GameObject registrationPrompt;
         public Mirror[] mirrors;
         public bool Registered { get; private set; }

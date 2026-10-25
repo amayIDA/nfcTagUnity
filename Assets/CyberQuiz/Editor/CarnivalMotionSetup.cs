@@ -63,7 +63,7 @@ namespace CyberQuiz.Editor
             {
                 var art=panel.GetComponentsInChildren<Image>(true).First(i=>i.sprite!=null&&i.sprite.name.StartsWith("FigmaQuestionPanel"));Place(art.rectTransform,285,205,1350,800);
                 var title=panel.GetComponentsInChildren<Text>(true).First(t=>t.text=="Instructions");title.text="HOW TO PLAY · DATA CLASSIFICATION";title.fontSize=39;Place(title.rectTransform,350,380,1220,68);
-                var body=panel.GetComponentsInChildren<Text>(true).First(t=>t.text.StartsWith("1.")||t.text.StartsWith("Read each"));body.text="Read each question. Tap cube A, B, C or D for the classification shown on that letter.\nThe four labels move each question. Ten random questions. Correct answers rank first; time breaks ties.";body.fontSize=39;body.lineSpacing=1.2f;Place(body.rectTransform,400,445,1120,210);
+                var body=panel.GetComponentsInChildren<Text>(true).First(t=>t.text.StartsWith("1.")||t.text.StartsWith("Read each"));body.text="Read each question. Tap the OPEN, SECRET, CONFIDENTIAL or SENSITIVE cube.\nThe four choices move each question. Ten random questions. Correct answers rank first; time breaks ties.";body.fontSize=39;body.lineSpacing=1.2f;Place(body.rectTransform,400,445,1120,210);
             }
             var game=q.gameObject.AddComponent<CarnivalMotion>();game.quiz=q;q.motion=game;game.feedbackTitle=q.feedbackTitle.rectTransform;game.feedbackBody=q.feedbackBody.rectTransform;
             var sparks=new System.Collections.Generic.List<RectTransform>();var rings=new System.Collections.Generic.List<CarnivalRing>();var labels=new System.Collections.Generic.List<Text>();var roots=new System.Collections.Generic.List<CanvasGroup>();

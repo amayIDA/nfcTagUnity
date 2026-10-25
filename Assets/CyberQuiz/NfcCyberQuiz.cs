@@ -81,9 +81,10 @@ namespace CyberQuiz
         public void SubmitTag(string value)
         {
             if (!running || !answering) return;
-            int index=Array.IndexOf(ClassificationBank.Tags, (value ?? "").Trim());
-            if(index<0 || index>=ClassificationBank.Letters.Length) { status.text="Unknown tag. Tap A, B, C or D."; return; }
-            Choose(index);
+            string label=ClassificationBank.LabelForTag(value);
+            int option=label==null?-1:Array.IndexOf(order, label);
+            if(option<0) { status.text="Unknown tag. Tap OPEN, SECRET, CONFIDENTIAL or SENSITIVE."; return; }
+            Choose(option);
         }
         void Clear()
         {
@@ -97,7 +98,7 @@ namespace CyberQuiz
             Label("NFC  /  SECURITY TRAINING",root,.1f,.8f,.9f,.87f,24,accent);
             Label("CYBER SHIELD",root,.1f,.61f,.9f,.78f,64,Color.white);
             Label("Ten questions. Four cubes. Think before you tap.",root,.1f,.51f,.9f,.61f,28,Color.white);
-            Label("Tap tag A, B, C or D. The four classifications move between those letters each question.\nCorrect answers earn "+pointsPerCorrectAnswer+" points. You can also click an option to test.",root,.1f,.33f,.9f,.48f,23,new Color32(169,188,210,255));
+            Label("Tap the OPEN, SECRET, CONFIDENTIAL or SENSITIVE cube. The four choices move each question.\nCorrect answers earn "+pointsPerCorrectAnswer+" points. You can also click an option to test.",root,.1f,.33f,.9f,.48f,23,new Color32(169,188,210,255));
             Button("START QUIZ",root,.32f,.17f,.68f,.28f,accent,()=> { current=0; score=0; running=true; questions=ClassificationBank.DrawRound(); ShowQuestion(); });
         }
         void ShowQuestion()
@@ -108,11 +109,11 @@ namespace CyberQuiz
             Label("SCORE  "+score,root,.78f,.9f,.95f,.96f,22,Color.white);
             Label(q.prompt,root,.06f,.72f,.94f,.88f,28,Color.white);
             order=ClassificationBank.ShuffleClassifications();
-            for(int i=0;i<ClassificationBank.Letters.Length;i++)
+            for(int i=0;i<ClassificationBank.Labels.Length;i++)
             {
                 int option=i; int col=i%2, row=i/2;
                 float x=.06f+col*.45f, top=.68f-row*.22f;
-                Button(ClassificationBank.Letters[i]+"   "+order[i],root,x,top-.18f,x+.43f,top,card,()=>Choose(option));
+                Button(order[i],root,x,top-.18f,x+.43f,top,card,()=>Choose(option));
             }
             status=Label("Ready — tap an NFC tag or click an option.",root,.06f,.115f,.94f,.19f,21,accent);
         }
@@ -123,7 +124,7 @@ namespace CyberQuiz
             foreach(var button in root.GetComponentsInChildren<Button>()) button.interactable=false;
             var q=questions[current]; bool correct=order[option]==q.answer;
             if(correct) score+=pointsPerCorrectAnswer;
-            status.text=(correct ? "CORRECT  +"+pointsPerCorrectAnswer : "INCORRECT  +0")+"   |   You chose "+ClassificationBank.Letters[option]+" "+order[option]+". Answer: "+q.answer+"\n"+q.explanation;
+            status.text=(correct ? "CORRECT  +"+pointsPerCorrectAnswer : "INCORRECT  +0")+"   |   You chose "+order[option]+". Answer: "+q.answer+"\n"+q.explanation;
             status.fontSize=19; status.color=correct ? accent : new Color32(255,191,116,255);
             Button(current==questions.Length-1 ? "SEE RESULTS" : "NEXT QUESTION",root,.64f,.025f,.94f,.095f,accent,()=> { current++; if(current<questions.Length) ShowQuestion(); else Results(); });
         }

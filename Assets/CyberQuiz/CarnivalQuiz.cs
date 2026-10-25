@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
@@ -32,6 +33,7 @@ namespace CyberQuiz
         [Tooltip("Idle seconds ending a keyboard-reader scan without Enter.")] public float scanIdleSeconds=.35f;
         [Tooltip("Minimum visible feedback duration. Timer pauses during feedback.")] public float feedbackSeconds=2.8f;
         [Min(1),Tooltip("Seconds the completed-game leaderboard stays visible before both screens return to idle.")] public float leaderboardSeconds=10f;
+        [Min(1),Tooltip("After the quiz starts, reload the scene when nobody taps, scans, or clicks for this many seconds.")] public float inactivitySeconds=120f;
         public bool reducedMotion;
         public bool RecordScores=true;
         public CarnivalDisplays displays;
@@ -49,8 +51,8 @@ namespace CyberQuiz
         float lastChar;
         double elapsed;
         int current,correct;
-        bool accepting, busy, saved;
-        float autoIdleAt=-1;
+        bool accepting, busy, saved, quizRunning, restarting;
+        float autoIdleAt=-1, lastActivity;
         public float LeaderboardSecondsRemaining=>autoIdleAt<0?0:Mathf.Max(0,autoIdleAt-Time.unscaledTime);
         public int CorrectCount=>correct;
         public int RoundCount=>round==null?0:round.Length;
@@ -77,6 +79,17 @@ namespace CyberQuiz
             if(accepting) { elapsed+=Time.unscaledDeltaTime;hudTime.text="Time : "+elapsed.ToString("0.0")+" sec"; }
             if(scan.Length>0 && Time.unscaledTime-lastChar>scanIdleSeconds) Flush();
             if(autoIdleAt>=0&&Time.unscaledTime>=autoIdleAt&&!busy){autoIdleAt=-1;ReturnHome();}
+            if(quizRunning&&!restarting)
+            {
+                if(AnyPlayerInput())lastActivity=Time.unscaledTime;
+                if(Time.unscaledTime-lastActivity>=inactivitySeconds){restarting=true;quizRunning=false;SceneManager.LoadScene(gameObject.scene.name);}
+            }
+        }
+        static bool AnyPlayerInput()
+        {
+            var keys=Keyboard.current; if(keys!=null&&keys.anyKey.wasPressedThisFrame)return true;
+            var mouse=Mouse.current; if(mouse!=null&&(mouse.leftButton.wasPressedThisFrame||mouse.rightButton.wasPressedThisFrame||mouse.middleButton.wasPressedThisFrame))return true;
+            var touch=Touchscreen.current; return touch!=null&&touch.primaryTouch.press.wasPressedThisFrame;
         }
         void OnCharacter(char c)
         {
@@ -91,7 +104,7 @@ namespace CyberQuiz
             var options=ActiveQuestion.options;
             for(int i=0;i<options.Length;i++)if(options[i].nfcValue==(value??"").Trim()){CarnivalAudio.Nfc();SelectOption(i);return;}
             CarnivalAudio.Invalid();
-            readerStatus.text="Tag not recognised. Please tap A, B, C or D.";
+            readerStatus.text="Tag not recognised. Tap the OPEN, SECRET, CONFIDENTIAL or SENSITIVE cube.";
         }
         public void OpenInstructions(){if(!busy){autoIdleAt=-1;accepting=false;hud.SetActive(false);StartCoroutine(Switch(instructions));}}
         public void StartQuiz()
@@ -101,6 +114,7 @@ namespace CyberQuiz
             autoIdleAt=-1;
             if(motion!=null)motion.Clear();
             participant=playerName.text.Trim();if(participant.Length==0)participant="Agent "+(scores.entries.Count+1).ToString("000");
+            quizRunning=true;lastActivity=Time.unscaledTime;
             current=correct=0;elapsed=0;saved=false;hud.SetActive(true);hudName.text=participant;
             hudTime.text="Time : 0.0 sec";hudCorrect.text="Correct Answers : 0";
             round=ClassificationBank.DrawRound();
@@ -120,8 +134,8 @@ namespace CyberQuiz
             {
                 var o=view.options[i];
                 o.optionIndex=i;
-                o.nfcValue=ClassificationBank.Tags[i];
-                if(o.label!=null)o.label.text=ClassificationBank.Letters[i]+"   "+order[i];
+                o.nfcValue=ClassificationBank.TagFor(order[i]);
+                if(o.label!=null)o.label.text=order[i];
                 if(order[i]==item.answer)view.correctOption=i;
                 o.ResetVisual();
             }
@@ -164,7 +178,7 @@ namespace CyberQuiz
         }
         public void OpenLeaderboard(){if(busy)return;autoIdleAt=-1;accepting=false;hud.SetActive(false);FillLeaderboard();StartCoroutine(EnterLeaderboard());}
         IEnumerator EnterLeaderboard(){yield return Switch(leaderboard);if(displays==null||displays.Registered)autoIdleAt=Time.unscaledTime+leaderboardSeconds;}
-        public void ReturnHome(){if(busy)return;autoIdleAt=-1;accepting=false;scan="";hud.SetActive(false);if(motion!=null)motion.Clear();if(displays!=null){displays.ResetRegistration();FillLeaderboard();}var home=displays!=null?leaderboard:splash;if(visible==home)ShowImmediate(home);else StartCoroutine(Switch(home));}
+        public void ReturnHome(){if(busy)return;quizRunning=false;autoIdleAt=-1;accepting=false;scan="";hud.SetActive(false);if(motion!=null)motion.Clear();if(displays!=null){displays.ResetRegistration();FillLeaderboard();}var home=displays!=null?leaderboard:splash;if(visible==home)ShowImmediate(home);else StartCoroutine(Switch(home));}
         public bool IsBusy=>busy;
         public CanvasGroup VisiblePanel=>visible;
         static void Hide(CanvasGroup group){group.alpha=0;group.gameObject.SetActive(false);group.interactable=false;group.blocksRaycasts=false;}
@@ -241,6 +255,20 @@ namespace CyberQuiz
             value=value??"";
             if(value.IndexOfAny(new[]{',','"','\n','\r'})<0)return value;
             return "\""+value.Replace("\"","\"\"")+"\"";
+        }
+        public void ClearLeaderboard()
+        {
+            scores=new Scores();
+            try
+            {
+                Directory.CreateDirectory(Application.persistentDataPath);
+                var temp=ScorePath+".tmp";
+                File.WriteAllText(temp,JsonUtility.ToJson(scores,true));
+                if(File.Exists(ScorePath))File.Replace(temp,ScorePath,ScorePath+".bak");
+                else File.Move(temp,ScorePath);
+            }
+            catch(Exception e){Debug.LogError("Leaderboard could not be cleared: "+e.Message);}
+            FillLeaderboard();
         }
         void FillLeaderboard()
         {

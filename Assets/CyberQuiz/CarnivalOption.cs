@@ -5,7 +5,7 @@ namespace CyberQuiz
 {
     public class CarnivalOption : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
-        [Tooltip("Zero-based option slot: 0=A, 1=B, 2=C, 3=D. NFC stays on this letter; classification labels shuffle.")][Range(0,3)] public int optionIndex;
+        [Tooltip("Button slot. The classification label and its NFC tag are assigned when the question appears.")][Range(0,3)] public int optionIndex;
         [Tooltip("Exact decimal NFC value for this option; keep it as text.")]public string nfcValue;
         public Button button;
         public Image surface;

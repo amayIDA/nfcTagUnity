@@ -23,6 +23,7 @@ namespace CyberQuiz.Editor
             var panel=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/CyberQuiz/Art/FigmaQuestionPanel.png");
             var action=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/CyberQuiz/Art/Group 8.png");
             var d=q.displays;
+            if(d.registration!=null&&d.keyboard!=null&&d.registration.transform.Find("Registration card")!=null)return;
             var font=q.hudName!=null?q.hudName.font:Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             CoverIdle(d);
             if(d.nameField!=null)d.nameField.transform.SetParent(d.registration.transform,true);

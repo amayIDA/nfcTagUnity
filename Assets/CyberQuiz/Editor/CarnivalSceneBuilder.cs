@@ -53,7 +53,7 @@ namespace CyberQuiz.Editor
             quiz.instructions=Screen("02 — Instructions and Player Name",canvas.transform);
             Panel("Instructions panel",quiz.instructions.transform,160,325,1600,450);
             Label("HOW TO PLAY",quiz.instructions.transform,240,365,1440,42,36);
-            Label("1. Read each of the 10 questions.\n2. Tap cube A, B, C or D for the classification shown on that letter.\n3. Most correct answers wins. Fastest answer time breaks ties.",quiz.instructions.transform,350,430,1220,150,30);
+            Label("1. Read each of the 10 questions.\n2. Tap the OPEN, SECRET, CONFIDENTIAL or SENSITIVE cube.\n3. Most correct answers wins. Fastest answer time breaks ties.",quiz.instructions.transform,350,430,1220,150,30);
             var input=Rect("Player Name field",quiz.instructions.transform,650,600,620,64);var image=input.AddComponent<Image>();image.color=new Color(.015f,.08f,.2f,.9f);
             var field=input.AddComponent<InputField>();field.targetGraphic=image;field.characterLimit=24;
             field.textComponent=Label("",input.transform,20,0,580,64,28);var placeholder=Label("Player Name",input.transform,20,0,580,64,28);placeholder.color=new Color(.7f,.83f,1,.7f);field.placeholder=placeholder;quiz.playerName=field;

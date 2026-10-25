@@ -19,8 +19,8 @@ namespace CyberQuiz.Editor
                 if(option.optionIndex>=4){option.gameObject.SetActive(false);continue;}
                 option.nfcValue=ClassificationBank.Tags[option.optionIndex];
                 option.label=option.GetComponentInChildren<Text>(true);
-                if(option.label!=null)option.label.text=ClassificationBank.Letters[option.optionIndex]+"   "+ClassificationBank.Labels[option.optionIndex];
-                option.gameObject.name="Option "+ClassificationBank.Letters[option.optionIndex]+" — NFC "+ClassificationBank.Tags[option.optionIndex];
+                if(option.label!=null)option.label.text=ClassificationBank.Labels[option.optionIndex];
+                option.gameObject.name="Option "+ClassificationBank.Labels[option.optionIndex]+" — NFC "+ClassificationBank.Tags[option.optionIndex];
                 Place((RectTransform)option.transform,option.optionIndex%2==0?280:1040,510+option.optionIndex/2*110,600,96);
                 EditorUtility.SetDirty(option);
             }
@@ -36,7 +36,7 @@ namespace CyberQuiz.Editor
             foreach(var t in Object.FindObjectsByType<Text>(FindObjectsInactive.Include,FindObjectsSortMode.None))
             {
                 if(t.text.Contains("5 questions")||t.text.Contains("NFC card to answer"))
-                    t.text="Read each question. Tap cube A, B, C or D for the classification shown on that letter.\nThe four labels move each question. Ten random questions. Correct answers rank first; time breaks ties.";
+                    t.text="Read each question. Tap the OPEN, SECRET, CONFIDENTIAL or SENSITIVE cube.\nThe four choices move each question. Ten random questions. Correct answers rank first; time breaks ties.";
             }
             if(q.displays!=null)
             {

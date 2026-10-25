@@ -9,7 +9,6 @@ namespace CyberQuiz
     {
         public const int RoundSize = 10;
         public const string FileName = "nfc-tags.json";
-        public static readonly string[] Letters = { "A", "B", "C", "D" };
         public static readonly string[] Labels = { "OPEN", "SECRET", "CONFIDENTIAL", "SENSITIVE" };
         public static readonly string[] Tags = { "2435786112", "2435817104", "2435882544", "2435920016" };
 
@@ -17,6 +16,12 @@ namespace CyberQuiz
         class NfcTagFile
         {
             public string comment;
+            public string OPEN, SECRET, CONFIDENTIAL, SENSITIVE;
+        }
+
+        [Serializable]
+        class LegacyNfcTagFile
+        {
             public string A, B, C, D;
         }
 
@@ -34,24 +39,68 @@ namespace CyberQuiz
                 }
                 var path = File.Exists(external) ? external : streamed;
                 if (!File.Exists(path)) return;
-                var data = JsonUtility.FromJson<NfcTagFile>(File.ReadAllText(path));
-                if (data == null) return;
-                Apply(0, data.A); Apply(1, data.B); Apply(2, data.C); Apply(3, data.D);
-                Debug.Log("NFC tags loaded from "+path);
+                if (ReadTags(File.ReadAllText(path), out bool legacy))
+                {
+                    Debug.Log("NFC tags loaded from "+path);
+                    if (legacy) File.WriteAllText(path, JsonUtility.ToJson(FromTags(), true));
+                }
             }
             catch (Exception e) { Debug.LogWarning("NFC tag file could not be read: "+e.Message); }
         }
 
         static NfcTagFile FromTags() => new NfcTagFile
         {
-            comment = "NFC IDs for cubes A-D. Edit this file, save, then restart the game. No rebuild needed.",
-            A = Tags[0], B = Tags[1], C = Tags[2], D = Tags[3]
+            comment = "NFC IDs for the classification cubes. Each value is the tag for that classification. Edit this file, save, then restart the game. No rebuild needed.",
+            OPEN = Tags[0], SECRET = Tags[1], CONFIDENTIAL = Tags[2], SENSITIVE = Tags[3]
         };
 
-        static void Apply(int index, string value)
+        static bool ReadTags(string json, out bool legacy)
+        {
+            legacy = false;
+            var data = JsonUtility.FromJson<NfcTagFile>(json);
+            if (data == null) return false;
+            if (Any(data.OPEN, data.SECRET, data.CONFIDENTIAL, data.SENSITIVE))
+            {
+                Apply("OPEN", data.OPEN);
+                Apply("SECRET", data.SECRET);
+                Apply("CONFIDENTIAL", data.CONFIDENTIAL);
+                Apply("SENSITIVE", data.SENSITIVE);
+                return true;
+            }
+            var old = JsonUtility.FromJson<LegacyNfcTagFile>(json);
+            if (old == null || !Any(old.A, old.B, old.C, old.D)) return false;
+            Apply("OPEN", old.A);
+            Apply("SECRET", old.B);
+            Apply("CONFIDENTIAL", old.C);
+            Apply("SENSITIVE", old.D);
+            legacy = true;
+            return true;
+        }
+
+        static bool Any(params string[] values)
+        {
+            foreach (var value in values) if (!string.IsNullOrWhiteSpace(value)) return true;
+            return false;
+        }
+
+        static void Apply(string label, string value)
         {
             value = (value ?? "").Trim();
-            if (value.Length > 0) Tags[index] = value;
+            if (value.Length == 0) return;
+            for (int i = 0; i < Labels.Length; i++) if (Labels[i] == label) { Tags[i] = value; return; }
+        }
+
+        public static string TagFor(string label)
+        {
+            for (int i = 0; i < Labels.Length; i++) if (Labels[i] == label) return Tags[i];
+            return "";
+        }
+
+        public static string LabelForTag(string value)
+        {
+            value = (value ?? "").Trim();
+            for (int i = 0; i < Tags.Length; i++) if (Tags[i] == value) return Labels[i];
+            return null;
         }
 
         public static string Folder
